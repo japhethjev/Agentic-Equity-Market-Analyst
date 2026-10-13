@@ -1,0 +1,8 @@
+pandas
+numpy
+yfinance
+plotly
+langgraph
+langchain-openai
+python-dotenv
+pytest
