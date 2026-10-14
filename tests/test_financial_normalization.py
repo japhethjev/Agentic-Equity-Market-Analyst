@@ -89,3 +89,45 @@ def test_cash_flow_rejects_duplicates():
 
     with pytest.raises(ValueError, match="Duplicate observation"):
         normalize_quarterly_cash_flow(extracted)
+
+
+def test_cash_flow_excludes_historical_dividend_only_periods():
+    """Only operating-cash-flow reporting dates define quarterly periods."""
+    from tools.financial_statements.normalization import (
+        normalize_quarterly_cash_flow,
+    )
+
+    extracted = {
+        "operating_cash_flow": {
+            "concept": "NetCashProvidedByUsedInOperatingActivities",
+            "quarterly_observations": [
+                {
+                    "end": "2026-06-27",
+                    "val": 34369000000,
+                    "source_accessions": ["accession-2026"],
+                },
+            ],
+        },
+        "common_stock_dividends": {
+            "concept": "PaymentsOfDividendsCommonStock",
+            "quarterly_observations": [
+                {
+                    "end": "2017-12-30",
+                    "val": 3000000000,
+                    "source_accessions": ["accession-2017"],
+                },
+            ],
+        },
+    }
+
+    statements = normalize_quarterly_cash_flow(extracted)
+
+    assert len(statements) == 1
+    assert statements[0]["period_end"] == "2026-06-27"
+    assert "operating_cash_flow" in statements[0]["metrics"]
+    assert "common_stock_dividends" not in statements[0]["metrics"]
+
+    # The original SEC observations must remain available.
+    assert len(
+        extracted["common_stock_dividends"]["quarterly_observations"]
+    ) == 1

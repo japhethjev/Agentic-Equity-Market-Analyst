@@ -68,8 +68,19 @@ def normalize_quarterly_cash_flow(extracted: dict) -> list[dict]:
                 "concept": result.get("concept"),
             }
 
+    anchor_dates = {
+        observation["end"]
+        for observation in extracted.get("operating_cash_flow", {}).get(
+            "quarterly_observations", []
+        )
+    }
+
     return sorted(
-        periods.values(),
+        (
+            statement
+            for period_end, statement in periods.items()
+            if period_end in anchor_dates
+        ),
         key=lambda statement: statement["period_end"],
         reverse=True,
     )
