@@ -96,3 +96,39 @@ def test_prefer_latest_nine_month_filing():
     assert len(result) == 1
     assert result[0]["val"] == 260
     assert result[0]["nine_month_accn"] == "nine-month-amended"
+
+
+def test_prefers_original_annual_over_later_comparative():
+    original = {
+        "start": "2023-10-01",
+        "end": "2024-09-28",
+        "val": 1000,
+        "form": "10-K",
+        "filed": "2024-11-01",
+        "accn": "annual-2024",
+    }
+
+    comparative = {
+        **original,
+        "val": 1100,
+        "filed": "2025-10-31",
+        "accn": "annual-2025-comparative",
+    }
+
+    nine_month = {
+        "start": "2023-10-01",
+        "end": "2024-06-29",
+        "val": 750,
+        "form": "10-Q",
+        "filed": "2024-08-02",
+        "accn": "nine-month-2024",
+    }
+
+    result = reconstruct_fourth_quarters([
+        comparative, nine_month, original
+    ])
+
+    assert len(result) == 1
+    assert result[0]["val"] == 250
+    assert result[0]["fy_accn"] == "annual-2024"
+    assert result[0]["nine_month_accn"] == "nine-month-2024"

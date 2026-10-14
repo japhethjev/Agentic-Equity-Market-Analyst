@@ -12,7 +12,34 @@ def reconstruct_fourth_quarters(
 ) -> list[dict]:
     """Derive Q4 as full-year less nine-month cumulative values."""
 
-    annual = select_annual_observations(observations)
+    # Prefer the original annual filing rather than later
+    # comparative observations from subsequent fiscal years.
+    annual_by_period = {}
+
+    for item in observations:
+        if item.get("form") not in {"10-K", "10-K/A"}:
+            continue
+
+        if not item.get("start") or not item.get("end"):
+            continue
+
+        if not item.get("filed") or not item.get("accn"):
+            continue
+
+        key = (item["start"], item["end"])
+        existing = annual_by_period.get(key)
+
+        if existing is None or (
+            item["filed"], item["accn"]
+        ) < (
+            existing["filed"], existing["accn"]
+        ):
+            annual_by_period[key] = item
+
+    original_annual = select_annual_observations(
+        list(annual_by_period.values())
+    )
+    annual = original_annual
     reconstructed = []
 
     for full_year in annual:
@@ -46,6 +73,17 @@ def reconstruct_fourth_quarters(
             # Use the filing vintage available when the annual
             # report was filed. Exclude later comparative filings.
             if item.get("filed", "") > full_year["filed"]:
+                continue
+
+            try:
+                filing_lag = (
+                    date.fromisoformat(item["filed"])
+                    - nine_month_end
+                ).days
+            except (TypeError, ValueError):
+                continue
+
+            if not 0 <= filing_lag <= 120:
                 continue
 
             if (
