@@ -29,6 +29,7 @@ from tools.financial_statements.normalization import normalize_balance_sheet
 from tools.financial_statements.cash_flow import extract_cash_flow
 from tools.financial_statements.normalization import normalize_quarterly_cash_flow
 
+from tools.financial_statements.cash_flow_annual import normalize_annual_cash_flow
 from tools.financial_statements.cash_flow_ttm import calculate_cash_flow_ttm
 
 class FinancialStatementsState(TypedDict, total=False):
@@ -39,6 +40,7 @@ class FinancialStatementsState(TypedDict, total=False):
     quarterly_income_statements: list[dict]
     ttm_income_statements: list[dict]
     balance_sheets: list[dict]
+    annual_cash_flows: list[dict]
     quarterly_cash_flows: list[dict]
     ttm_cash_flows: list[dict]
     extracted_cash_flows: dict
@@ -102,6 +104,17 @@ def construct_quarterly_cash_flows(
     }
 
 
+def construct_annual_cash_flows(
+    state: FinancialStatementsState,
+) -> dict:
+    """Construct SEC-reported annual cash-flow statements."""
+    return {
+        "annual_cash_flows": normalize_annual_cash_flow(
+            state["extracted_cash_flows"]
+        )
+    }
+
+
 def construct_ttm_cash_flows(
     state: FinancialStatementsState,
 ) -> dict:
@@ -151,6 +164,7 @@ def build_financial_statements_agent():
 
     graph.add_node("construct_quarterly_cash_flows", construct_quarterly_cash_flows)
 
+    graph.add_node("construct_annual_cash_flows", construct_annual_cash_flows)
     graph.add_node("construct_ttm_cash_flows", construct_ttm_cash_flows)
     graph.add_node("validate_financial_statements", validate_financial_statements)
     graph.add_node("present_financial_statements", present_financial_statements)
@@ -159,7 +173,8 @@ def build_financial_statements_agent():
     graph.add_edge("retrieve_company_facts", "construct_income_statements")
     graph.add_edge("construct_income_statements", "construct_balance_sheets")
     graph.add_edge("construct_balance_sheets", "construct_quarterly_cash_flows")
-    graph.add_edge("construct_quarterly_cash_flows", "construct_ttm_cash_flows")
+    graph.add_edge("construct_quarterly_cash_flows", "construct_annual_cash_flows")
+    graph.add_edge("construct_annual_cash_flows", "construct_ttm_cash_flows")
     graph.add_edge("construct_ttm_cash_flows", "validate_financial_statements")
     graph.add_edge("validate_financial_statements", "present_financial_statements")
     graph.add_edge("present_financial_statements", END)

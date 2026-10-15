@@ -45,6 +45,7 @@ def test_financial_statements_workflow_execution(monkeypatch):
         "construct_income_statements",
         "construct_balance_sheets",
         "construct_quarterly_cash_flows",
+        "construct_annual_cash_flows",
         "construct_ttm_cash_flows",
         "validate_financial_statements",
         "present_financial_statements",

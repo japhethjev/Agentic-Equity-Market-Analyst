@@ -9,6 +9,7 @@ BALANCE_SHEET_CONCEPTS = {
     "shareholders_equity": "StockholdersEquity",
     "cash_and_equivalents": "CashAndCashEquivalentsAtCarryingValue",
     "current_assets": "AssetsCurrent",
+    "inventory": "InventoryNet",
     "current_liabilities": "LiabilitiesCurrent",
     "long_term_debt": "LongTermDebt",
     "current_portion_long_term_debt": "LongTermDebtCurrent",
