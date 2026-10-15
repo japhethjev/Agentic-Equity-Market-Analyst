@@ -80,7 +80,7 @@ def construct_balance_sheets(state: FinancialStatementsState) -> dict:
     """Extract and normalize SEC balance sheet observations."""
     extracted = extract_balance_sheet(
         state["company_facts"],
-        periods=12,
+        periods=24,
     )
     return {
         "balance_sheets": normalize_balance_sheet(extracted),
